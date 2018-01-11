@@ -1,0 +1,73 @@
+[supervisord]
+nodaemon=false
+
+[unix_http_server]
+file=${SOCKFILE}
+chmod=0700
+
+[supervisord]
+logfile=${LOGDIR}/supervisord.log
+pidfile=${PIDFILE}
+childlogdir=${LOGDIR}/supervisor
+
+[supervisorctl]
+serverurl=unix://${SOCKFILE}
+
+[inet_http_server]
+port = 127.0.0.1:7000
+username = redis-cluster
+password = redis@123
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[program:redis-1]
+command=${WD}/redis/src/redis-server ${WD}/redis-conf/7001/redis.conf 
+stdout_logfile=${LOGDIR}/%(program_name)s.log
+stderr_logfile=${LOGDIR}/%(program_name)s.log
+autorestart=true
+
+[program:redis-2]
+command=${WD}/redis/src/redis-server ${WD}/redis-conf/7002/redis.conf
+stdout_logfile=${LOGDIR}/%(program_name)s.log
+stderr_logfile=${LOGDIR}/%(program_name)s.log
+autorestart=true
+
+[program:redis-3]
+command=${WD}/redis/src/redis-server ${WD}/redis-conf/7003/redis.conf
+stdout_logfile=${LOGDIR}/%(program_name)s.log
+stderr_logfile=${LOGDIR}/%(program_name)s.log
+autorestart=true
+
+[program:redis-4]
+command=${WD}/redis/src/redis-server ${WD}/redis-conf/7004/redis.conf
+stdout_logfile=${LOGDIR}/%(program_name)s.log
+stderr_logfile=${LOGDIR}/%(program_name)s.log
+autorestart=true
+
+[program:redis-5]
+command=${WD}/redis/src/redis-server ${WD}/redis-conf/7005/redis.conf
+stdout_logfile=${LOGDIR}/%(program_name)s.log
+stderr_logfile=${LOGDIR}/%(program_name)s.log
+autorestart=true
+
+[program:redis-6]
+command=${WD}/redis/src/redis-server ${WD}/redis-conf/7006/redis.conf
+stdout_logfile=${LOGDIR}/%(program_name)s.log
+stderr_logfile=${LOGDIR}/%(program_name)s.log
+autorestart=true
+
+[program:redis-7]
+command=${WD}/redis/src/redis-server ${WD}/redis-conf/7007/redis.conf
+stdout_logfile=${LOGDIR}/%(program_name)s.log
+stderr_logfile=${LOGDIR}/%(program_name)s.log
+autorestart=true
+
+[program:redis-8]
+command=${WD}/redis/src/redis-server ${WD}/redis-conf/7008/redis.conf
+stdout_logfile=${LOGDIR}/%(program_name)s.log
+stderr_logfile=${LOGDIR}/%(program_name)s.log
+autorestart=true
+
+[group:redis-cluster-instances]
+programs=redis-1,redis-2,redis-3,redis-4,redis-5,redis-6,redis-7,redis-8

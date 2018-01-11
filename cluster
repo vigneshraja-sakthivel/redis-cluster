@@ -1,0 +1,71 @@
+#!/bin/sh
+WD="$PWD";
+PIDFILE=${WD}/run/supervisord.pid
+SOCKFILE=${WD}/run/supervisor.sock
+LOGDIR=${WD}/log
+SUPERVISORCONF=${WD}/redis-conf/redis-cluster-supervisord.conf
+
+start() {
+    for port in `seq 7001 7008`; do
+      mkdir -p ${WD}/redis-conf/${port}
+      mkdir -p ${WD}/redis-data/${port}
+
+      if [ -e ${WD}/redis-data/${port}/nodes.conf ]; then
+        rm ${WD}/redis-data/${port}/nodes.conf
+      fi
+    done
+
+    for port in `seq 7001 7006`; do
+      PORT=${port} WD=${WD} LOGDIR=${LOGDIR} envsubst < ${WD}/conf-templates/redis-cluster.tmpl > ${WD}/redis-conf/${port}/redis.conf
+    done
+
+    for port in `seq 7007 7008`; do
+      PORT=${port} WD=${WD} LOGDIR=${LOGDIR} envsubst < ${WD}/conf-templates/redis.tmpl > ${WD}/redis-conf/${port}/redis.conf
+    done
+
+    WD=${WD} PIDFILE=${PIDFILE} SOCKFILE=${SOCKFILE} LOGDIR=${LOGDIR} envsubst < ${WD}/conf-templates/redis-cluster-supervisord.tmpl > ${SUPERVISORCONF}
+
+    mkdir ${WD}/log/supervisor/ -p
+    mkdir ${WD}/process/ -p
+    mkdir ${WD}/run/ -p
+
+    supervisord -c ${WD}/redis-conf/redis-cluster-supervisord.conf
+    sleep 3
+
+    IP=`ifconfig | grep "inet addr:127" | cut -f2 -d ":" | cut -f1 -d " "`
+    echo "yes" | ruby ${WD}/redis/src/redis-trib.rb create --replicas 1 ${IP}:7001 ${IP}:7002 ${IP}:7003 ${IP}:7004 ${IP}:7005 ${IP}:7006
+}
+
+stop() {
+    sudo supervisorctl -c ${SUPERVISORCONF} stop redis-cluster-instances:*
+    sudo start-stop-daemon --stop --quiet --oknodo --pidfile ${PIDFILE}
+    sleep 3
+
+    for port in `seq 7001 7008`; do
+      rm -r ${WD}/redis-conf/${port}
+      rm -r ${WD}/redis-data/${port}
+    done
+
+    rm ${WD}/log/ -r
+    rm ${WD}/process/ -r
+    rm ${WD}/run/ -r
+}
+
+if [ ! "`whoami`" = "root" ]
+then
+    echo "The script should be run the user with root privilleges"
+    exit
+fi
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  *)
+    echo "Usage: $SCRIPTNAME {start|stop}" >&2
+    exit 3
+    ;;
+esac
