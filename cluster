@@ -41,14 +41,11 @@ stop() {
     sudo start-stop-daemon --stop --quiet --oknodo --pidfile ${PIDFILE}
     sleep 3
 
-    for port in `seq 7001 7008`; do
-      rm -r ${WD}/redis-conf/${port}
-      rm -r ${WD}/redis-data/${port}
-    done
-
     rm ${WD}/log/ -r
     rm ${WD}/process/ -r
     rm ${WD}/run/ -r
+    rm ${WD}/redis-conf/* -r
+    rm ${WD}/redis-data/* -r
 }
 
 if [ ! "`whoami`" = "root" ]
