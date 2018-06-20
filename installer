@@ -1,0 +1,58 @@
+#!/bin/sh
+
+
+REDIS_VERSION=3.2.9
+
+PD=$(pwd)
+cd "$(dirname "$0")"
+WD=$(pwd)
+echo ${WD};
+
+RED='\033[0;31m'
+NC='\033[0m'
+
+install_dependencies() {
+    sudo apt-get update &&
+    sudo apt-get install --no-install-recommends -y net-tools supervisor ruby rubygems locales gettext-base wget gcc make g++ build-essential libc6-dev tcl git supervisor ruby &&
+    sudo apt-get clean -y
+}
+
+install_gems() {
+    sudo gem install redis -v 3.3.3
+}
+
+get_redis()
+{
+    wget -qO redis.tar.gz http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz &&
+    tar xfz redis.tar.gz -C ${WD}/ &&
+    mv ${WD}/redis-${REDIS_VERSION} ${WD}/redis &&
+    rm redis.tar.gz
+}
+
+install_redis()
+{
+    cd ${WD}/redis
+    make
+}
+
+init_directories()
+{
+    mkdir ${WD}/redis-data
+    mkdir ${WD}/redis-conf
+}
+
+do_install()
+{
+    install_dependencies && install_gems && get_redis && install_redis && init_directories
+    cd ${PD}
+}
+
+if [ ! "`whoami`" = "root" ]
+then
+    printf "${RED}The script should be run the user with root privilleges. Since, the sciprt is not run as root user, It might prompt you to provide password! Proceed? (Y/N): ${NC}"
+    read confirmation
+    case $confirmation in
+        Y ) do_install; break;;
+        * ) exit;;
+    esac
+fi

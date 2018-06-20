@@ -2,3 +2,5 @@ log/
 process/
 run/
 redis/
+redis-conf/
+redis-data/

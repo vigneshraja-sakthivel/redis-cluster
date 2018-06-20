@@ -1,5 +1,5 @@
 #!/bin/sh
-WD="$PWD";
+WD=`dirname $0`;
 PIDFILE=${WD}/run/supervisord.pid
 SOCKFILE=${WD}/run/supervisor.sock
 LOGDIR=${WD}/log
@@ -26,7 +26,6 @@ start() {
     WD=${WD} PIDFILE=${PIDFILE} SOCKFILE=${SOCKFILE} LOGDIR=${LOGDIR} envsubst < ${WD}/conf-templates/redis-cluster-supervisord.tmpl > ${SUPERVISORCONF}
 
     mkdir ${WD}/log/supervisor/ -p
-    mkdir ${WD}/process/ -p
     mkdir ${WD}/run/ -p
 
     supervisord -c ${WD}/redis-conf/redis-cluster-supervisord.conf
@@ -42,17 +41,10 @@ stop() {
     sleep 3
 
     rm ${WD}/log/ -r
-    rm ${WD}/process/ -r
     rm ${WD}/run/ -r
     rm ${WD}/redis-conf/* -r
     rm ${WD}/redis-data/* -r
 }
-
-if [ ! "`whoami`" = "root" ]
-then
-    echo "The script should be run the user with root privilleges"
-    exit
-fi
 
 case "$1" in
   start)
