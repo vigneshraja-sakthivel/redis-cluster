@@ -15,6 +15,9 @@ start() {
       fi
     done
 
+    mkdir -p ${WD}/redis-conf/6379
+    mkdir -p ${WD}/redis-data/6379
+
     for port in `seq 7001 7006`; do
       PORT=${port} WD=${WD} LOGDIR=${LOGDIR} envsubst < ${WD}/conf-templates/redis-cluster.tmpl > ${WD}/redis-conf/${port}/redis.conf
     done
@@ -23,6 +26,7 @@ start() {
       PORT=${port} WD=${WD} LOGDIR=${LOGDIR} envsubst < ${WD}/conf-templates/redis.tmpl > ${WD}/redis-conf/${port}/redis.conf
     done
 
+    PORT=6379 WD=${WD} LOGDIR=${LOGDIR} envsubst < ${WD}/conf-templates/redis-cluster.tmpl > ${WD}/redis-conf/${port}/redis.conf
     WD=${WD} PIDFILE=${PIDFILE} SOCKFILE=${SOCKFILE} LOGDIR=${LOGDIR} envsubst < ${WD}/conf-templates/redis-cluster-supervisord.tmpl > ${SUPERVISORCONF}
 
     mkdir ${WD}/log/supervisor/ -p
@@ -53,8 +57,12 @@ case "$1" in
   stop)
     stop
     ;;
+  restart)
+    stop
+    start
+    ;;
   *)
-    echo "Usage: $SCRIPTNAME {start|stop}" >&2
+    echo "Usage: $SCRIPTNAME {start|stop|restart}" >&2
     exit 3
     ;;
 esac
